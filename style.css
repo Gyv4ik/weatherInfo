@@ -1,0 +1,22 @@
+.main {
+	font-size: 14px;
+	width: 300px;
+	border: 1px solid;
+}
+.row {
+	font-size: 0;
+	line-height: 0;
+	text-align: center;
+
+}
+.city {
+	text-align: center;
+}
+.min,
+.feel,
+.max {
+	display: inline-block;
+	font-size: 14px;
+	line-height: 1.5em;
+	margin: 5px 10px;
+}
