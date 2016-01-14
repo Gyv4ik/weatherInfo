@@ -4,19 +4,39 @@
 	<meta charset="UTF-8">
 	<title>Weather widget</title>
 	<link rel="stylesheet" href="style.css">
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.0.0-alpha1/jquery.min.js"></script>
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
 </head>
 <body>
-	<div class="main">
-		<div class="image"></div>
-		<div class="city">Kharkov</div>
-		<div class="row">
-			<div class="min">-10</div>
-			<div class="feel">-15</div>
-			<div class="max">-20</div>
+	<div class="weather ui-widget">
+		<div class="main">
+			<div class="main__content">
+			<div class="main__image-cont">
+				<img class="main__image" src="/images/ic_wb_sunny_white_48dp_1x.png" alt="sunny">
+			</div>
+			<div class="main__condition"></div>
+			<div class="main__city"></div>
+			<div class="main__row">
+				<div class="main__min">
+					<span class="main__min-text"></span><span>°</span>
+				</div>
+				<div class="main__cur">
+					<span class="main__cur-text"></span><span>°</span>
+				</div>
+				<div class="main__max">
+					<span class="main__max-text"></span><span>°</span>
+				</div>
+			</div>
+			</div>
+		</div>
+		<div class="additional">
+			<div class="additional__content">
+				<input class="additional__city-input" type="text" placeholder="Please, enter a city">
+				<button class='additional__go-btn' type='button'>Go</button>
+			</div>
 		</div>
 	</div>
+
 <script src="index.js"></script>
 </body>
 </html>
