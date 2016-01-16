@@ -1,12 +1,16 @@
-(function($, undefined){
+//TODO Пофиксить в additional ввод города. С Харьковом все ок.
+//Autocomplete
+//For retina
 
-	$.widget('custom.weatherInfo', {
-		options: {
-			height: 200,
-			width: 300,
-			city: null
-		},
-		model: {
+(function($, undefined) {
+
+	$.fn.weatherWidget = function() {
+
+		var self = this;
+
+		var model = {
+			options: null,
+			location: {},
 			activeState: 'main',
 			mainState: {
 				condition: null,
@@ -14,161 +18,143 @@
 				minT: null,
 				maxT: null,
 				curT: null,
+				feel: null,
 				image: null
 			},
 			additionalState: {
 				city: null
 			}
-		},
+		}
+		var defaults = {
+			height: null,
+			with: null
+		};
 
-		_init: function() {
-			var self = this;
-			var height = self.options.height + "px";
-			var width = self.options.width + "px";
-			var getLocation = $.Deferred(function(deff) {
+		init();
+
+		function init(params) {
+
+			// актуальные настройки, будут индивидуальными при каждом запуске
+			model.options = $.extend({}, defaults, params);
+
+			getLocation()
+				.then(getInfo)
+				.then(parseData, function() {alert('Невозможно получить данные с сервера.')})
+				.then(getInfo)
+				.then(parseData, function() {alert('Невозможно получить данные с сервера.')})
+				.then(render);
+
+			getLocation().fail([changeState, render]);
+				// .then(null, this._changeState.bind(this))
+				// .then(null, this._render.bind(this));
+
+			$(self).find('.main__city').on('click', null, function() {
+				changeState();
+				render();
+			});
+
+			$(self).find('.additional__go-btn').on('click', null, function() {
+				city = $('.additional__city-input').val();
+				model.mainState.city = city;
+
+				getInfo()
+				.then(parseData, function() {alert('Невозможно получить данные с сервера.')})
+				.fail(function(e) {console.log('error');})
+				.then(changeState)
+				.then(render);
+			});
+
+		// инициализируем один раз
+            var init = $(self).data('weatherWidget');
+
+            if (!init) {
+                $(self).data('weatherWidget', true);
+            }
+
+            // return this;
+		}
+
+        function getLocation() {
+			return $.Deferred(function(deff) {
 				navigator.geolocation.getCurrentPosition(function(position) {
-					var pos = {
-						lat: position.coords.latitude,
-						lon: position.coords.longitude
-					};
-					if (!pos.lat || !pos.lon) deff.reject();
-					deff.resolve(pos);
+					model.location.lat =  position.coords.latitude;
+					model.location.lon = position.coords.longitude;
+					console.log(model.location);
+					if (!model.location.lat || !model.location.lon) deff.reject();
+					deff.resolve();
 				});
 			});
+		}
 
-			// self.element.addClass('weather');
-			getLocation
-				.then(self._getInfo)
-				.then(self._parseData.bind(self), function() {alert('Невозможно получить данные с сервера.')})
-				.then(self._render.bind(self));
-
-			getLocation.fail([self._changeState.bind(self), self._render.bind(self)]);
-			// .then(null, this._changeState.bind(this))
-			// .then(null, this._render.bind(this));
-
-			$(this.element).find('.main__city').on('click', null, function() {
-				self._changeState();
-				self._render();
-			});
-
-			$(this.element).find('.additional__go-btn').on('click', null, function() {
-					var options = {};
-
-					options.city = $('.additional__city-input').val();
-					options.country = 'ukraine';
-
-					self._getInfo(options)
-						.then(self._parseData.bind(self), function() {alert('Невозможно получить данные с сервера.')})
-						.then(self._changeState.bind(self))
-						.then(self._render.bind(self));
-				});
-
-			// self._autocomplete();
-		},
-
-		_getInfo: function(options) {
+		function getInfo() {
 			console.log('get was done');
 			var url;
-			var city = options.city;
-			var country = options.country;
+			var city = model.mainState.city;
 			var key = '37bf27aa42b29522';
-			var language = 'en';
+			var lang = 'lang:EN';
+			var format = 'json';
+			var feature1 = 'geolookup';
+			var feature2 = 'conditions';
+			var feature3 = 'forecast';
 
 			if (city) {
-				url = 'http://api.wunderground.com/api/'+key+'/geolookup/q/'+language+'/'+city+'.json';
+				url = 'http://api.wunderground.com/api/'+key+'/'+feature3+'/'+feature2+'/'+lang+'/q/'+city+'.'+format;
 				return $.get(url);
 			}
+			// url = 'http://api.wunderground.com/api/'+key+'/'+feature1+'/q/'+model.location.lat+','+model.location.lon+'.'+format;
+			url = 'http://api.wunderground.com/api/'+key+'/'+feature1+'/'+lang+'/q/'+model.location.lat+','+model.location.lon+'.'+format
+			return $.get(url);
+		}
 
-			url = 'http://api.wunderground.com/api/'+key+'/geolookup/q/'+language+'/'+city+'.json';
-			return $.get(url, {lat: options.lat, lon: options.lon});
-		},
-
-		_parseData: function(data) {
+		function parseData(data) {
 			console.log(data);
-			var KELVIN = 273;
-
-			this.model.mainState.curT = parseInt(data.main.temp.toFixed(0)) - KELVIN;
-			this.model.mainState.minT = parseInt(data.main['temp_min'].toFixed(0)) - KELVIN;
-			this.model.mainState.maxT = parseInt(data.main['temp_max'].toFixed(0)) - KELVIN;
-			this.model.mainState.condition = data.weather[0].description;
-			this.model.mainState.city = data.name;
-			this.model.mainState.image = 'images/'
+			if(data.location) {
+				model.mainState.city = data.location.city;
+				return
+			}
+			if(data.response.results) {
+				return new Error('Wrong city name');
+			}
+			model.mainState.curT = parseInt(data.current_observation.temp_c);
+			model.mainState.feel = parseInt(data.current_observation.feelslike_c);
+			model.mainState.minT = parseInt(data.forecast.simpleforecast.forecastday[0].low.celsius);
+			model.mainState.maxT = parseInt(data.forecast.simpleforecast.forecastday[0].high.celsius);
+			model.mainState.condition = data.current_observation.weather;
+			model.mainState.image = data.current_observation.icon_url;
 			// console.log(this.model);
-		},
+		}
 
-		_render: function() {
+		function render() {
 			console.log('render');
-			if (this.model.activeState == 'main') {
+			if (model.activeState == 'main') {
 				$('.additional').hide();
 				$('.main').css('display', 'table');
-				$('.main__condition').text(this.model.mainState.condition);
-				$('.main__city').text(this.model.mainState.city);
-				$('.main__cur-text').text(this.model.mainState.curT);
-				// if (this.model.mainState.minT == this.model.mainState.curT) {
-				// 	$('.main__min').hide();
-				// 	$('.main__max').hide();
-				// 	return;
-				// }
-				$('.main__min-text').text(this.model.mainState.minT);
-				$('.main__max-text').text(this.model.mainState.maxT);
-				// $('.main__min').show();
-				// $('.main__max').show();
+				$('.main__image').attr('src', model.mainState.image);
+				$('.main__condition').text(model.mainState.condition);
+				$('.main__city').text(model.mainState.city);
+				$('.main__cur-text').text(model.mainState.curT);
+				$('.main__feel-text').text(model.mainState.feel);
+				$('.main__min-text').text(model.mainState.minT);
+				$('.main__max-text').text(model.mainState.maxT);
 				return;
 			}
 			$('.main').hide();
 			$('.additional').css('display', 'table');
-		},
+		}
 
-		_changeState: function() {
+		function changeState() {
 			console.log('change state');
-			var activeState = this.model.activeState;
-				if (!activeState || activeState == 'additional') {
-					this.model.activeState = 'main';
-					return;
-				}
-			this.model.activeState = 'additional';
-		},
-
-		_autocomplete: function() {
-			$( ".additional__city-input" ).autocomplete({
-				source: function( request, response ) {
-					$.ajax({
-						url: "http://gd.geobytes.com/AutoCompleteCity",
-						dataType: "jsonp",
-						data: {
-							q: request.term
-						},
-						success: function( data ) {
-							response( data );
-						}
-					});
-				},
-				minLength: 3,
-
-				open: function() {
-					$( this ).removeClass( "ui-corner-all" ).addClass( "ui-corner-top" );
-				},
-				close: function() {
-					$( this ).removeClass( "ui-corner-top" ).addClass( "ui-corner-all" );
-				}
-			});
-				// function log( message ) {
-				// 	$( "<div>" ).text( message ).prependTo( "#log" );
-				// 	$( "#log" ).scrollTop( 0 );
-				// }
-			},
-
-			height: function(value) {
-				if (value === undefined) return this.options.height;
-				this.options.height = value;
-				// console.log(value);
-			},
-
-			width: function(value) {
-				this.options.width = value;
+			var activeState = model.activeState;
+			if (!activeState || activeState == 'additional') {
+				model.activeState = 'main';
+				return;
 			}
-		});
+			model.activeState = 'additional';
+		}
 
-$('.weather').weatherInfo({height: 200, width: 300});
+    };
+    $('.weather').weatherWidget();
 
 })(jQuery);
+
+

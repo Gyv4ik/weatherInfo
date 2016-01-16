@@ -1,7 +1,7 @@
 .weather {
 	font-family: verdana, Arial, Helvetica, sans-serif;
 	font-size: 14px;
-	height: 200px;
+	/*height: 200px;*/
 	width: 300px;
 	line-height: 1.5em;
 	text-align: center;
@@ -28,7 +28,7 @@
 	vertical-align: middle;
 }
 .main__image-cont {
-	margin-bottom: 5%;
+	/*margin-bottom: 5%;*/
 }
 .main__image {
 	display: block;
@@ -57,6 +57,7 @@
 }
 .main__min,
 .main__cur,
+.main__feel,
 .main__max {
 	display: inline-block;
 	font-size: 14px;
