@@ -3,6 +3,8 @@
 <head>
 	<meta charset="UTF-8">
 	<title>Weather widget</title>
+	<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+	<link href='https://fonts.googleapis.com/css?family=Roboto:400,500,700' rel='stylesheet' type='text/css'>
 	<link rel="stylesheet" href="style.css">
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
 </head>
@@ -10,29 +12,40 @@
 	<div class="weather">
 		<div class="main">
 			<div class="main__content">
-			<div class="main__image-cont">
-				<img class="main__image" src="" alt="condition image">
-			</div>
-			<div class="main__condition"></div>
-			<div class="main__city"></div>
 			<div class="main__row">
-				<div class="main__min">
-					<span class="main__min-text"></span><span>°</span>
+				<div class="main__col">
+					<div class="main__left">
+						<div class="main__cur">
+							<span class="main__cur-text"></span><span>°</span>
+						</div>
+						<div class="main__condition"></div>
+					</div>
+					<div class="main__right">
+						<div class="main__min">
+							min: <span class="main__min-text"></span><span>°</span>
+						</div>
+						<div class="main__max">
+							max: <span class="main__max-text"></span><span>°</span>
+						</div>
+						<div class="main__feel">
+							feel: <span class="main__feel-text"></span><span>°</span>
+						</div>
+					</div>
 				</div>
-				<div class="main__cur">
-					<span class="main__cur-text"></span><span>°</span>
+				<div class="main__col">
+					<div class="main__image-cont">
+						<img class="main__image" src="" alt="condition image">
+					</div>
 				</div>
-				<div class="main__feel">
-					<span class="main__feel-text"></span><span>°</span>
-				</div>
-				<div class="main__max">
-					<span class="main__max-text"></span><span>°</span>
-				</div>
+			</div>
+			<div class="main__row clearfix">
+				<div class="main__city"><i class="material-icons">room</i><span class="main__city-text"></span></div>
 			</div>
 			</div>
 		</div>
 		<div class="additional">
 			<div class="additional__content">
+				<div class="additional__error-mes"></div>
 				<input class="additional__city-input" type="text" placeholder="Please, enter a city">
 				<button class='additional__go-btn' type='button'>Go</button>
 			</div>
