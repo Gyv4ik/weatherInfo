@@ -34,6 +34,8 @@
 
 		init();
 
+		autocomplete();
+
 		$(self).on('click', null, function(event) {
 			var className = event.target.className;
 
@@ -41,17 +43,28 @@
 				changeState();
 				render();
 			}
+			else if(event.target.className == 'autocomplete-suggestion') {
+				$('.additional__city-input').focus();
+			}
+		});
 
-			else if(className == 'additional__go-btn') {
-				city = $('.additional__city-input').val();
+		$('.weather').on('keypress', '.additional', function() {
+			var enterKeyCode = '13';
+
+   			if(event.keyCode == enterKeyCode) {
+   				city = $('.additional__city-input').val();
+   				if (city.length == 0) return;
 				model.mainState.city = city;
 
 				getInfo()
 					.then(parseData, function() {throw new Error('Сервер не отвечает')})
-					.then(function(error) {if(!error) changeState()})
+					.then(function(error) {
+						if(!error) changeState();
+						pushToStorage();
+					})
 					.then(render)
 					.fail(errorHandler);
-			}
+       		}
 		});
 
 		function init(params) {
@@ -80,6 +93,7 @@
 
 		// инициализируем один раз
             init = $(self).data('weatherWidget');
+
             if (!init) {
                 $(self).data('weatherWidget', true);
             }
@@ -136,7 +150,6 @@
 
 			if(error) {
 				model.additionalState.error = error.description;
-
 				// throw new Error(error.description);
 				return error;
 			}
@@ -146,6 +159,7 @@
 			}
 			if(data.response.results) {
 				throw new Error('Wrong city name');
+				return;
 			}
 			model.mainState.curT = parseInt(data.current_observation.temp_c);
 			model.mainState.feel = parseInt(data.current_observation.feelslike_c);
@@ -153,7 +167,8 @@
 			model.mainState.maxT = parseInt(data.forecast.simpleforecast.forecastday[0].high.celsius);
 			model.mainState.condition = data.current_observation.weather;
 			model.mainState.image = data.current_observation.icon_url;
-			// console.log(this.model);
+			model.mainState.city = data.current_observation.display_location.city;
+			console.log(model.mainState.city);
 		}
 
 		function render() {
@@ -161,8 +176,9 @@
 			var error = model.additionalState.error;
 
 			if (model.activeState == 'main') {
+				$('.additional__city-input').val('');
+				$('.additional__error-mes').text('');
 				$('.additional').hide();
-				$('.additional__error-mes').hide();
 				$('.main').css('display', 'table');
 				$('.main__image').attr('src', model.mainState.image);
 				$('.main__condition').text(model.mainState.condition);
@@ -175,17 +191,28 @@
 			}
 			$('.main').hide();
 			$('.additional').css('display', 'table');
-			if (error) $('.additional__error-mes').text(error).show();
+			if (error) {
+				$('.additional__error-mes').text(error);
+				model.additionalState.error = '';
+			}
 		}
 
-		function changeState() {
+		function changeState(stateName) {
 			console.log('change state');
-			var activeState = model.activeState;
+			var activeState;
+
+			if (stateName) {
+				model.activeState = stateName;
+				return;
+			}
+			activeState = model.activeState;
 			if (!activeState || activeState == 'additional') {
 				model.activeState = 'main';
+				console.log(model.activeState);
 				return;
 			}
 			model.activeState = 'additional';
+			console.log(model.activeState);
 		}
 
 		function pushToStorage() {
@@ -197,11 +224,44 @@
 		}
 
 		function errorHandler(error) {
-			render();
 			console.log(error);
 		}
 
-    };
+		// function autocomplete(query) {
+		// 	var url = "http://autocomplete.wunderground.com/aq?cb=?";
+
+		// 	$.ajax(url, {
+		// 		type: 'GET',
+		// 		dataType: 'jsonp',
+		// 		data: {
+		// 			query: query
+		// 		}
+		// 	})
+		// 	.success(function(data) {
+		// 		$('.additional__autocomplete-suggestion').text(data['RESULTS'][0].name);
+		// 	});
+		// }
+
+	function autocomplete() {
+		$('.additional__city-input').autocomplete({
+			serviceUrl: "http://autocomplete.wunderground.com/aq?cb=?",
+			dataType: 'jsonp',
+			paramName: 'query',
+			data: {
+				query: 'k'
+			},
+			transformResult: function(data) {
+				console.log(data);
+				return { suggestions: data['RESULTS'].filter(function(item) {return item.type == 'city';}).map(function(item) {
+					return item.name;
+				})};
+			},
+			onSelect: function(suggestion) {
+
+			}
+		});
+	}
+};
     $('.weather').weatherWidget();
 
 })(jQuery);
