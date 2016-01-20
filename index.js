@@ -1,4 +1,3 @@
-//TODO добавить шаблонизатор
 //VDefault-ные значения задать
 //Options
 //заджоинить url колбасу
@@ -19,7 +18,7 @@
 				minT: null,
 				maxT: null,
 				curT: null,
-				feel: null,
+				feelT: null,
 				image: null
 			},
 			additionalState: {
@@ -33,7 +32,6 @@
 		};
 
 		init();
-		autocomplete();
 
 		$(self).on('click', null, function(event) {
 			var className = event.target.className;
@@ -148,7 +146,7 @@
 				return;
 			}
 			mainState.curT = parseInt(curObs.temp_c);
-			mainState.feel = parseInt(curObs.feelslike_c);
+			mainState.feelT = parseInt(curObs.feelslike_c);
 			mainState.minT = parseInt(data.forecast.simpleforecast.forecastday[0].low.celsius);
 			mainState.maxT = parseInt(data.forecast.simpleforecast.forecastday[0].high.celsius);
 			mainState.condition = curObs.weather;
@@ -161,11 +159,9 @@
 			console.log('render');
 			var mainState = model.mainState;
 			var error = model.additionalState.error;
-			template({
-			curT = model.mainState.curT;
-		});
-			var template = _.template(
-				'<div class="main">
+			var templateSettings = {};
+			var mainStateTmpl = _.template(
+				`<div class="main">
 					<div class="main__content">
 						<div class="main__row">
 							<div class="main__col">
@@ -173,7 +169,7 @@
 									<div class="main__cur">
 										<span class="main__cur-text"><%= curT %></span>°
 									</div>
-									<div class="main__condition"></div>
+									<div class="main__condition"><%= condition %></div>
 								</div>
 								<div class="main__right">
 									<div class="main__min">
@@ -189,7 +185,7 @@
 							</div>
 							<div class="main__col">
 								<div class="main__image-cont">
-									<img class="main__image" src="<%= imageSrc %>" alt="condition image">
+									<img class="main__image" src="<%= image %>" alt="condition image">
 							</div>
 						</div>
 					</div>
@@ -197,34 +193,34 @@
 						<div class="main__city"><i class="material-icons">room</i><span class="main__city-text"><%= city %></span></div>
 					</div>
 				</div>
-			</div>
-			<div class="additional">
-				<div class="additional__content">
-					<div class="additional__error-mes"></div>
-					<input class="additional__city-input" type="text" placeholder="Please, enter a city">
-				</div>
-			</div>');
+			</div>`);
+
+			var additionStateTmpl = _.template(
+				`<div class="additional">
+					<div class="additional__content">
+						<div class="additional__error-mes"></div>
+						<input class="additional__city-input" type="text" placeholder="Please, enter a city">
+					</div>
+				</div>`);
 
 			if (model.activeState == 'main') {
-				$(self).find('.additional__city-input').val('');
-				$(self).find('.additional__error-mes').text('');
-				$(self).find('.additional').hide();
-				$(self).find('.main').css('display', 'table');
-				$(self).find('.main__image').attr('src', mainState.image);
-				$(self).find('.main__condition').text(mainState.condition);
-				$(self).find('.main__city-text').text(mainState.city);
-				$(self).find('.main__cur-text').text(mainState.curT);
-				$(self).find('.main__feel-text').text(mainState.feel);
-				$(self).find('.main__min-text').text(mainState.minT);
-				$(self).find('.main__max-text').text(mainState.maxT);
+				templateSettings.curT= mainState.curT;
+				templateSettings.minT= mainState.minT;
+				templateSettings.maxT= mainState.maxT;
+				templateSettings.feelT= mainState.feelT;
+				templateSettings.condition= mainState.condition;
+				templateSettings.image= mainState.image;
+				templateSettings.city= mainState.city;
+
+				$(self).html(mainStateTmpl(templateSettings));
 				return;
 			}
-			$(self).find('.main').hide();
-			$(self).find('.additional').css('display', 'table');
 			if (error) {
-				$(self).find('.additional__error-mes').text(error);
+				templateSettings.error = error;
 				model.additionalState.error = '';
 			}
+			$(self).html(additionStateTmpl(templateSettings));
+			autocomplete();
 		}
 
 		function changeState(stateName) {
@@ -288,5 +284,3 @@
 $('.weather').weatherWidget();
 
 })(jQuery);
-
-
