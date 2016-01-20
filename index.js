@@ -1,13 +1,8 @@
-//VDefault-ные значения задать
-//Options
-//заджоинить url колбасу
-
 (function($, undefined) {
 
-	$.fn.weatherWidget = function() {
+	$.fn.weatherWidget = function(params) {
 
 		var self = this;
-
 		var model = {
 			options: null,
 			location: {},
@@ -27,13 +22,13 @@
 			}
 		}
 		var defaults = {
-			height: null,
-			with: null
+			height: 150,
+			with: 300,
 		};
 
 		init();
 
-		$(self).on('click', null, function(event) {
+		self.on('click', null, function(event) {
 			var className = event.target.className;
 
 			if(event.target.parentNode.className == 'main__city') {
@@ -41,15 +36,14 @@
 				render();
 			}
 			else if(event.target.className == 'autocomplete-suggestion') {
-				$(self).find('.additional__city-input').focus();
+				self.find('.additional__city-input').focus();
 			}
 		});
 
-		function init(params) {
+		function init() {
 
 			var init;
 
-			// актуальные настройки, будут индивидуальными при каждом запуске
 			model.options = $.extend({}, defaults, params);
 
 			var myWeather = localStorage.getItem('myWeather');
@@ -70,24 +64,13 @@
 			.fail(errorHandler);
 
 			// инициализируем один раз
-			init = $(self).data('weatherWidget');
+			init = self.data('weatherWidget');
 
 			if (!init) {
-				$(self).data('weatherWidget', true);
+				self.data('weatherWidget', true);
 			}
-		}
 
-		function getInfoHandler(data) {
-			var error = data.response.error;
-
-			if (error) {
-				alert(error.description);
-				return;
-			}
-			if (model.activeState == 'additional') {
-				alert('К сожалению, сервер не отвечает. Попробуйте позже.');
-			}
-			return data;
+			return this;
 		}
 
 		function getLocation() {
@@ -203,6 +186,7 @@
 					</div>
 				</div>`);
 
+			self.css({'height': model.options.height, 'width': model.options.width});
 			if (model.activeState == 'main') {
 				templateSettings.curT= mainState.curT;
 				templateSettings.minT= mainState.minT;
@@ -212,14 +196,14 @@
 				templateSettings.image= mainState.image;
 				templateSettings.city= mainState.city;
 
-				$(self).html(mainStateTmpl(templateSettings));
+				self.html(mainStateTmpl(templateSettings));
 				return;
 			}
 			if (error) {
 				templateSettings.error = error;
 				model.additionalState.error = '';
 			}
-			$(self).html(additionStateTmpl(templateSettings));
+			self.html(additionStateTmpl(templateSettings));
 			autocomplete();
 		}
 
@@ -254,7 +238,7 @@
 		}
 
 		function autocomplete() {
-			$(self).find('.additional__city-input').autocomplete({
+			self.find('.additional__city-input').autocomplete({
 				serviceUrl: "http://autocomplete.wunderground.com/aq?cb=?",
 				dataType: 'jsonp',
 				paramName: 'query',
@@ -265,7 +249,7 @@
 					})};
 				},
 				onSelect: function(suggestion) {
-					var city = $(self).find('.additional__city-input').val();
+					var city = self.find('.additional__city-input').val();
 					if (city.length == 0) return;
 					model.mainState.city = city;
 
@@ -281,6 +265,6 @@
 			});
 		}
 };
-$('.weather').weatherWidget();
+$('.weather').weatherWidget({width: '500', height: '300'});
 
 })(jQuery);
